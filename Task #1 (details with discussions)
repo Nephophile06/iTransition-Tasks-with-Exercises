@@ -1,0 +1,60 @@
+// discussions
+
+Assume that you are asked to find the longest common substring from the set of the given strings (no requirements about code size, limited number of strings, or limited string lengths). Let's say we have n strings of the l length and we have a fixed alphabet, for example, Latin.
+Let's use Python as a language for the implementation. Of course, we start with the simplest "brute-force" algorithm, checking all the possible substrings or the first string.
+
+def naive_lcs(ss):
+    if len(ss) > 0:
+        for i in range(len(ss[0]), -1, -1):
+            for x in range(0, len(ss[0]) - i + 1):
+                t = ss[0][x:x+i]
+                if all(t in s for s in ss[1:]): return t
+    return ""
+
+However, there is a pretty high probability that you will be asked to optimize it. Well, using a generalized suffix tree, we may get something like this:
+
+from suffix_tree import Tree
+def stringify(_, length, path):
+    return "".join([path[i] for i in range(length)])
+def tree_lcs(ss):
+    if len(ss) == 0: return ""
+    if len(ss) == 1: return ss[0]
+    tree = Tree()
+    for id, s in enumerate(ss): tree.add(id, s)
+    return stringify(*tree.common_substrings()[-1])
+
+Just to illustrate the performance difference, I ran a few tests for n = 10 and different l values. I'll skip the description of how exactly I generated strings, but they look something like this (l = 32):
+['MNPPQVWTVVEBJDKBHNTFKPUZEJNRVZDH', 'ZBBFFHKJNPPNWRZRYFTZFLRZEJOTYDDH', 'MNQRUTYZWZAZJFOHPFMTALRXDJOTYDIN', 'ZBCDEFFHOJLLWTOXPXFTAHOXDJPVBDIN', 'MNOPTRTXXDWXJHDNGPFNVHOVCJPVBHNT', 'ZBDFDJHNPNSVWVSDXHYHVDLTCJQXBHNT', 'MNPRSVVVYXDHJJHDOHRHQZLTBJQXELST', 'ZBBDHHJLHROTWXWTFZRBLZIRBJRZELSZ', 'MNQPRTXTZBZFJLLJFRKVLVIRAJRZHPSZ', 'ZBCFGFLJILKRWZAZWRDVGVFPAJSBHPXF']
+
+It's a great idea to test edge cases — some arguments/parameters/states/etc. For example, zero number of arguments when arbitrary number of arguments are expected, empty array, empty string, min/max values of your types, values less/greater than supported min/max, etc. And, of course, null value. It doesn't mean that corresponding checks should always be explicitly placed in your code. Explicity is good thing, but, of course, sometimes you may "overcook". If in doubt, add a check. 
+
+
+// details
+
+a = process.argv.slice(2)
+👉 Command-line e ja input dibe (e.g., node lcs.js ABC XYZ DEF), sheita array banay ["ABC", "XYZ", "DEF"] — eta store hocche a te.
+
+l = a.length
+👉 Total koyta string diche input e — eta count korse.
+
+r = ""
+👉 Eta store korbe final longest common substring.
+
+if(l){
+👉 Jodi kono string input na thake (mane empty hoy), tahole kono operation korbe na. (Eita handle kortese node lcs.js er moto blank case)
+
+s = a[0]
+👉 First string ta ke base banachhe — ei string theke substring niye compare korbe baki gulor sathe.
+
+for(i=0;i<s.length;++i)
+  for(j=i+1;j<=s.length;++j){
+    t = s.slice(i,j)
+👉 Ei duita loop diye first string er sob possible substrings generate kortese — example: ABC → A, AB, ABC, B, BC, C
+
+if(t.length > r.length && a.every(x => x.includes(t)))
+  r = t
+👉 Ei condition ta main logic: t-er length boro hote hobe already stored longest r theke ✅ t must exist in every string of input (not just one/two) ✅
+Jodi duita condition true hoy — taile r update kore new longest common substring diye.
+
+console.log(r)
+👉 Sheshe result ta print kore — jeta output hobe. Jodi kono common substring na thake — r will remain empty string, and console.log(r) print korbe just empty line (✅ as required).
