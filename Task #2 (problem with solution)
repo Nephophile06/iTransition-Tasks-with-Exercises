@@ -1,0 +1,81 @@
+/*
+
+Use language of your group (C# or JavaScript/TypeScript). In principle, you can use anything else, like Java or Python or Ruby or anything you like (you don't submit the code in this task, only the result).
+
+Calculate SHA3-256 for every file from archive (https://www.dropbox.com/s/oy2668zp1lsuseh/task2.zip?dl=1). Note, files are binary, you don’t need encodings — if you read file to string with some encoding, you have to use the same encoding to decode string into bytes back for hashing (there is a technical term for such conversions — “stupid activity”).
+
+Write hashes as 64 hex digits in lower case.
+Sort hashes as strings in the descending order (not chars in hashes, but hashes as whole).
+Join sorted hashes without any separator.
+Concatenate resulted string with your e-mail in lowercase.
+Find the SHA3-256 of the result string.
+Note: SHA3-256 is not the same algorithm as SHA-256.
+
+Some additional hints (based on the experience of previous groups): 
+check if you use SHA3-256,
+check if you process exactly 256 required files (not everything in the some directory),
+check if you concatenate your strings without separator — beware of JavaScript's join!
+check if you write e-mail in lower case and e-mail goes to the end of the resulted string,
+and, of course, you have to calculate separate hash for every file, not to update the same hash with every file.
+
+Never work with binary files in text editors — if your IDE, e.g., changes automagically even a single byte, your won't get a proper result (redownload the files if necessary).
+
+*/
+
+
+const fs = require('fs');
+const path = require('path');
+const { sha3_256 } = require('js-sha3');
+
+const yourEmail = "anikabintaazad24@gmail.com"; 
+const folderPath = "C:\\Users\\Hi\\Downloads\\Compressed\\task2"; 
+
+function main() {
+    try {
+        console.log("Starting file processing...");
+        
+        const files = fs.readdirSync(folderPath);
+        console.log(`Found ${files.length} files`);
+        
+        if (files.length !== 256) {
+            console.log(`Warning: Expected 256 files, found ${files.length}`);
+        }
+        
+        const hashes = [];        
+        for (let i = 0; i < files.length; i++) {
+            const fileName = files[i];
+            const filePath = path.join(folderPath, fileName);            
+            const fileBuffer = fs.readFileSync(filePath);
+            const hash = sha3_256(fileBuffer);
+            
+            hashes.push(hash);
+            console.log(`${i + 1}. File: ${fileName} -> ${hash}`);
+        }
+        
+        hashes.sort((a, b) => b.localeCompare(a));        
+        console.log("\nSorting completed (descending order)");
+        const concatenatedHashes = hashes.join('');
+        
+        const emailLowercase = yourEmail.toLowerCase();
+        const finalString = concatenatedHashes + emailLowercase;
+        
+        console.log(`\nFinal string length: ${finalString.length}`);
+        console.log(`Email used: ${emailLowercase}`);
+        
+        const finalHash = sha3_256(finalString);
+        
+        console.log(`\n=== RESULT ===`);
+        console.log(`Final SHA3-256 hash: ${finalHash}`);
+        console.log(`\n=== SUBMIT COMMAND ===`);
+        console.log(`!task2 ${emailLowercase} ${finalHash}`);
+        
+    } catch (error) {
+        console.error('Error occurred:', error.message);
+        console.log('\nCommon fixes:');
+        console.log('1. Check if folder path is correct');
+        console.log('2. Make sure files are extracted properly');
+        console.log('3. Check if js-sha3 is installed (npm install js-sha3)');
+    }
+}
+
+main();
