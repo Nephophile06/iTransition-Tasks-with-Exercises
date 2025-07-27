@@ -1,0 +1,112 @@
+// discussions
+
+The hash algorithms work according to a very strict specification; all the "platforms" will get you the same results. There is no "partial" or "incomplete" implementation; it's either SHA3 or not (maybe it's some other algorithm). The only problem you may encounter relates to proper interpretation of the data. E.g., what is ab? Is this a single byte [171] (0xAB = 171) or two bytes [97, 98] ('a' has ASCII code 97, and 'b' is 98)? But it’s mostly related to some keys, like in the third task, not to binary data your mistake not re-encode in the second task.
+
+Beware of Keccak, which differs from SHA-3. However, some outdated libraries may still refer to it as SHA-3 (just use the out-of-the-box API of your platform). You need to debug your calculations and trace requirements into your code line by line (it’s the main training goal of this task). The list of most common mistakes is here: ⁠iLearning⁠. I believe that your mistake is listed there with 90% probability.
+
+
+// details
+
+const fs = require('fs');
+const path = require('path');
+const { sha3_256 } = require('js-sha3');
+
+🔹 Purpose: Ei line gulo necessary modules import korche:
+fs: File system module (file read/write er jonno).
+path: File path manage korte help kore.
+sha3_256: SHA3-256 hash function from js-sha3 package.
+
+const yourEmail = "anikabintaazad24@gmail.com";
+const folderPath = "C:\\Users\\YourName\\Desktop\\task2_files";
+
+🔹 Purpose:
+yourEmail: Tomar email lowercase e boshao.
+folderPath: Oi folder er path jekhane 256 ta file ache (unzipped task2 folder).
+
+function main() {
+    try {
+
+🔹 main() function ta start holo. Vitore try-catch block use kora hocche error handle korar jonno.
+
+console.log("Starting file processing...");
+🔹 Just ekta starting message terminal e print korche.
+
+const files = fs.readdirSync(folderPath);
+console.log(`Found ${files.length} files`);
+
+🔹 Ei duita line:
+Folder theke shob file er naam read kore.
+File count terminal e dekhae.
+
+if (files.length !== 256) {
+    console.log(`Warning: Expected 256 files, found ${files.length}`);
+}
+
+🔹 Check kore je 256 file ache kina. Na thakle warning dibe.
+
+const hashes = [];
+🔹 Hash save korar jonno ekta empty array.
+
+for (let i = 0; i < files.length; i++) {
+    const fileName = files[i];
+    const filePath = path.join(folderPath, fileName);
+
+🔹 Loop suru holo shob file er upor.
+fileName: Prottek file er naam.
+filePath: Full path banacche oi file er jonno.
+
+    const fileBuffer = fs.readFileSync(filePath);
+🔹 File ke binary (buffer) mode e read korche (hashing er jonno necessary).
+
+    const hash = sha3_256(fileBuffer);
+🔹 File er SHA3-256 hash banacche.
+
+    hashes.push(hash);
+    console.log(`${i + 1}. File: ${fileName} -> ${hash}`);
+}
+
+🔹 Hash ta array te push korche, and terminal e dekhae konta konta hash holo.
+
+hashes.sort((a, b) => b.localeCompare(a));
+console.log("\nSorting completed (descending order)");
+
+🔹 Hash gulo descending order e sort kore.
+
+const concatenatedHashes = hashes.join('');
+🔹 Shob hash ke ekta string e join kore (no space, no comma).
+
+const emailLowercase = yourEmail.toLowerCase();
+const finalString = concatenatedHashes + emailLowercase;
+
+🔹 Tomar email ta lowercase e convert kore, and shob hashes er pore add kore.
+
+console.log(`\nFinal string length: ${finalString.length}`);
+console.log(`Email used: ${emailLowercase}`);
+
+🔹 Final string er length & email terminal e print kore jate confirm kora jay.
+
+const finalHash = sha3_256(finalString);
+🔹 Ei final string er SHA3-256 hash banacche — eita i submit korar hash!
+
+console.log(`\n=== RESULT ===`);
+console.log(`Final SHA3-256 hash: ${finalHash}`);
+🔹 Final result terminal e show kore.
+
+console.log(`\n=== SUBMIT COMMAND ===`);
+console.log(`!task2 ${emailLowercase} ${finalHash}`);
+🔹 Ei format e submit command generate kore:
+!task2 your-email@gmail.com abcdef... (64 character hash)
+
+    } catch (error) {
+        console.error('Error occurred:', error.message);
+        console.log('\nCommon fixes:');
+        console.log('1. Check if folder path is correct');
+        console.log('2. Make sure files are extracted properly');
+        console.log('3. Check if js-sha3 is installed (npm install js-sha3)');
+    }
+}
+
+🔹 Jodi kono error hoy, tahole message dibe and ki fix korte hobe ta bolbe.
+
+main();
+🔹 Program ke run korche.
