@@ -1,0 +1,385 @@
+const crypto = require('crypto');
+const readlineSync = require('readline-sync');
+const Table = require('cli-table3');
+
+class FairRandomGenerator {
+    constructor() {
+        this.secretKey = crypto.randomBytes(32); // 256 bits
+    }
+
+    // Generate HMAC-SHA3 of a number using the secret key
+    generateHMAC(number) {
+        const hmac = crypto.createHmac('sha3-256', this.secretKey);
+        hmac.update(number.toString());
+        return hmac.digest('hex');
+    }
+
+
+
+    // Get the secret key for verification
+    getSecretKey() {
+        return this.secretKey.toString('hex');
+    }
+}
+
+class Dice {
+    constructor(values) {
+        this.values = values;
+        this.faces = values.length;
+    }
+
+    // Calculate probability that this dice beats another dice
+    getWinProbability(otherDice) {
+        let wins = 0;
+        let total = this.faces * otherDice.faces;
+
+        for (let value of this.values) {
+            for (let otherValue of otherDice.values) {
+                if (value > otherValue) {
+                    wins++;
+                }
+            }
+        }
+
+        return wins / total;
+    }
+
+    // Get all possible values
+    getValues() {
+        return [...this.values];
+    }
+
+    // Get number of faces
+    getFaceCount() {
+        return this.faces;
+    }
+}
+
+class DiceGame {
+    constructor(diceConfigs) {
+        this.dice = diceConfigs.map(config => new Dice(config));
+        this.diceCount = this.dice.length;
+    }
+
+    // Parse command line arguments into dice configurations
+    static parseArguments(args) {
+        if (args.length < 3) {
+            throw new Error(`Invalid number of dice. Expected at least 3 dice, got ${args.length}. Example: node game.js 2,2,4,4,9,9 6,8,1,1,8,6 7,5,3,7,5,3`);
+        }
+
+        const diceConfigs = [];
+        
+        for (let i = 0; i < args.length; i++) {
+            const diceStr = args[i];
+            const values = diceStr.split(',').map(val => {
+                const num = parseInt(val.trim());
+                if (isNaN(num)) {
+                    throw new Error(`Invalid dice configuration at position ${i + 1}: "${diceStr}". All values must be integers. Example: 2,2,4,4,9,9`);
+                }
+                return num;
+            });
+
+            if (values.length === 0) {
+                throw new Error(`Empty dice configuration at position ${i + 1}. Example: 2,2,4,4,9,9`);
+            }
+
+            diceConfigs.push(values);
+        }
+
+        return diceConfigs;
+    }
+
+    // Display probability table
+    displayProbabilityTable() {
+        console.log('\n=== DICE WIN PROBABILITIES ===');
+        console.log('This table shows the probability that the dice in the ROW beats the dice in the COLUMN.');
+        console.log('For example, if you choose Dice 1 and the computer chooses Dice 2, you have the probability shown in row 1, column 2.');
+        console.log('A probability > 0.5 means the row dice is favored to win against the column dice.\n');
+        
+        // Create table with headers
+        const table = new Table({
+            head: ['User Dice vs', ...this.dice.map((dice, index) => `Dice ${index + 1} [${dice.getValues().join(',')}]`)],
+            style: {
+                head: ['cyan', 'bold'],
+                border: ['gray']
+            },
+            colWidths: [25, ...this.dice.map(dice => Math.max(35, dice.getValues().join(',').length + 15))]
+        });
+        
+        // Add rows for each dice
+        for (let i = 0; i < this.diceCount; i++) {
+            const row = [`Dice ${i + 1} [${this.dice[i].getValues().join(',')}]`];
+            
+                         for (let j = 0; j < this.diceCount; j++) {
+                 const probability = this.dice[i].getWinProbability(this.dice[j]);
+                 const formattedProb = probability.toFixed(4);
+                 
+                 if (i === j) {
+                     // Diagonal - same dice vs itself
+                     row.push(`\x1b[33m${formattedProb}\x1b[0m`); // Yellow for diagonal
+                 } else {
+                     // Highlight probabilities > 0.5 (favorable matchups)
+                     if (probability > 0.5) {
+                         row.push(`\x1b[32m${formattedProb}\x1b[0m`); // Green for favorable
+                     } else if (probability < 0.5) {
+                         row.push(`\x1b[31m${formattedProb}\x1b[0m`); // Red for unfavorable
+                     } else {
+                         row.push(formattedProb); // White for 50/50
+                     }
+                 }
+             }
+            table.push(row);
+        }
+        
+        console.log(table.toString());
+        
+        console.log('\n📊 Interpretation:');
+        console.log('• \x1b[32mGreen numbers\x1b[0m: Row dice is favored to win (>50% chance)');
+        console.log('• \x1b[31mRed numbers\x1b[0m: Row dice is likely to lose (<50% chance)');
+        console.log('• \x1b[33mYellow numbers\x1b[0m: Same dice vs itself (diagonal)');
+        console.log('• White numbers: Equal chance (50% each)');
+        
+        // Show non-transitive property if it exists
+        this.showNonTransitiveAnalysis();
+    }
+
+    // Show non-transitive analysis
+    showNonTransitiveAnalysis() {
+        console.log('\n🔍 Non-Transitive Analysis:');
+        let hasNonTransitive = false;
+        
+        for (let i = 0; i < this.diceCount; i++) {
+            for (let j = i + 1; j < this.diceCount; j++) {
+                for (let k = j + 1; k < this.diceCount; k++) {
+                    const probAB = this.dice[i].getWinProbability(this.dice[j]);
+                    const probBC = this.dice[j].getWinProbability(this.dice[k]);
+                    const probCA = this.dice[k].getWinProbability(this.dice[i]);
+                    
+                    // Check if this is a non-transitive cycle (A>B, B>C, C>A)
+                    if (probAB > 0.5 && probBC > 0.5 && probCA > 0.5) {
+                        hasNonTransitive = true;
+                        console.log(`• Dice ${i + 1} > Dice ${j + 1} > Dice ${k + 1} > Dice ${i + 1} (Rock-Paper-Scissors cycle!)`);
+                        console.log(`  Probabilities: ${(probAB * 100).toFixed(1)}% > ${(probBC * 100).toFixed(1)}% > ${(probCA * 100).toFixed(1)}%`);
+                    }
+                }
+            }
+        }
+        
+        if (!hasNonTransitive) {
+            console.log('• No clear non-transitive cycles found in this dice set.');
+        }
+    }
+
+    // Provably fair random generation for determining first move
+    async determineFirstMove() {
+        console.log('\n=== DETERMINING WHO GOES FIRST ===');
+        console.log('Generating provably fair random number (0 or 1)...');
+        
+        const generator = new FairRandomGenerator();
+        const computerNumber = crypto.randomInt(2);
+        
+        console.log(`Computer's HMAC: ${generator.generateHMAC(computerNumber)}`);
+        console.log('Please enter your number (0 or 1):');
+        
+        const userNumber = parseInt(readlineSync.question('Your number: '));
+        
+        if (isNaN(userNumber) || userNumber < 0 || userNumber > 1) {
+            throw new Error('Invalid input. Please enter 0 or 1.');
+        }
+
+        const result = (computerNumber + userNumber) % 2;
+        
+        console.log(`\nComputer's secret key: ${generator.getSecretKey()}`);
+        console.log(`Computer's number: ${computerNumber}`);
+        console.log(`Your number: ${userNumber}`);
+        console.log(`Result: ${result} (${result === 0 ? 'Computer goes first' : 'You go first'})`);
+        
+        return result === 0 ? 'computer' : 'user';
+    }
+
+    // Provably fair dice roll
+    async fairDiceRoll(diceIndex) {
+        const dice = this.dice[diceIndex];
+        const maxValue = dice.getFaceCount();
+        
+        console.log(`\n=== ROLLING DICE ${diceIndex + 1} ===`);
+        console.log(`Dice ${diceIndex + 1} values: [${dice.getValues().join(', ')}]`);
+        
+        const generator = new FairRandomGenerator();
+        const computerNumber = crypto.randomInt(maxValue);
+        
+        console.log(`Computer's HMAC: ${generator.generateHMAC(computerNumber)}`);
+        console.log(`Please enter your number (0 to ${maxValue - 1}):`);
+        
+        const userNumber = parseInt(readlineSync.question('Your number: '));
+        
+        if (isNaN(userNumber) || userNumber < 0 || userNumber >= maxValue) {
+            throw new Error(`Invalid input. Please enter a number between 0 and ${maxValue - 1}.`);
+        }
+
+        const result = (computerNumber + userNumber) % maxValue;
+        const rolledValue = dice.getValues()[result];
+        
+        console.log(`\nComputer's secret key: ${generator.getSecretKey()}`);
+        console.log(`Computer's number: ${computerNumber}`);
+        console.log(`Your number: ${userNumber}`);
+        console.log(`Combined result: ${result}`);
+        console.log(`Rolled value: ${rolledValue}`);
+        
+        return rolledValue;
+    }
+
+    // Display menu and get user choice
+    displayMenu() {
+        console.log('\n=== GAME MENU ===');
+        console.log('Available dice:');
+        for (let i = 0; i < this.diceCount; i++) {
+            console.log(`${i + 1}. Dice ${i + 1} [${this.dice[i].getValues().join(', ')}]`);
+        }
+        console.log('h. Help (show probability table)');
+        console.log('q. Quit game');
+    }
+
+    // Get user dice choice
+    getUserDiceChoice() {
+        while (true) {
+            this.displayMenu();
+            const choice = readlineSync.question('\nSelect your dice: ').toLowerCase();
+            
+            if (choice === 'q') {
+                return null;
+            } else if (choice === 'h') {
+                this.displayProbabilityTable();
+                continue;
+            }
+            
+            const diceIndex = parseInt(choice) - 1;
+            if (diceIndex >= 0 && diceIndex < this.diceCount) {
+                return diceIndex;
+            }
+            
+            console.log(`Invalid choice. Please select 1-${this.diceCount}, 'h' for help, or 'q' to quit.`);
+        }
+    }
+
+    // Computer selects dice (random choice)
+    getComputerDiceChoice(excludeIndex) {
+        const availableDice = [];
+        for (let i = 0; i < this.diceCount; i++) {
+            if (i !== excludeIndex) {
+                availableDice.push(i);
+            }
+        }
+        
+        const randomIndex = Math.floor(Math.random() * availableDice.length);
+        return availableDice[randomIndex];
+    }
+
+    // Main game loop
+    async playGame() {
+        console.log('=== NON-TRANSITIVE DICE GAME ===');
+        console.log(`Playing with ${this.diceCount} dice`);
+        
+        try {
+            // Determine who goes first
+            const firstPlayer = await this.determineFirstMove();
+            console.log(`\n${firstPlayer === 'computer' ? 'Computer' : 'You'} will go first!`);
+            
+            while (true) {
+                let userDice, computerDice, userRoll, computerRoll;
+                
+                if (firstPlayer === 'user') {
+                    // User goes first
+                    userDice = this.getUserDiceChoice();
+                    if (userDice === null) {
+                        console.log('Thanks for playing!');
+                        break;
+                    }
+                    
+                    computerDice = this.getComputerDiceChoice(userDice);
+                    console.log(`\nComputer selected Dice ${computerDice + 1}`);
+                    
+                    userRoll = await this.fairDiceRoll(userDice);
+                    computerRoll = await this.fairDiceRoll(computerDice);
+                } else {
+                    // Computer goes first
+                    computerDice = this.getComputerDiceChoice(-1);
+                    console.log(`\nComputer selected Dice ${computerDice + 1}`);
+                    
+                    userDice = this.getUserDiceChoice();
+                    if (userDice === null) {
+                        console.log('Thanks for playing!');
+                        break;
+                    }
+                    
+                    if (userDice === computerDice) {
+                        console.log('You cannot select the same dice as the computer. Please choose a different dice.');
+                        continue;
+                    }
+                    
+                    computerRoll = await this.fairDiceRoll(computerDice);
+                    userRoll = await this.fairDiceRoll(userDice);
+                }
+                
+                // Determine winner
+                console.log('\n=== ROUND RESULT ===');
+                console.log(`Your roll: ${userRoll}`);
+                console.log(`Computer's roll: ${computerRoll}`);
+                
+                if (userRoll > computerRoll) {
+                    console.log('🎉 You win this round!');
+                } else if (computerRoll > userRoll) {
+                    console.log('💻 Computer wins this round!');
+                } else {
+                    console.log('🤝 It\'s a tie!');
+                }
+                
+                // Ask if player wants to continue
+                const continueGame = readlineSync.question('\nPlay another round? (y/n): ').toLowerCase();
+                if (continueGame !== 'y' && continueGame !== 'yes') {
+                    console.log('Thanks for playing!');
+                    break;
+                }
+            }
+            
+        } catch (error) {
+            console.error(`\nError: ${error.message}`);
+            process.exit(1);
+        }
+    }
+}
+
+// Main function
+function main() {
+    try {
+        // Get command line arguments (skip first two: node and script name)
+        const args = process.argv.slice(2);
+        
+        if (args.length === 0) {
+            console.error('Error: No dice configurations provided.');
+            console.error('Usage: node nonTransitiveDiceGame.js <dice1> <dice2> <dice3> [dice4] [dice5] ...');
+            console.error('Example: node nonTransitiveDiceGame.js 2,2,4,4,9,9 6,8,1,1,8,6 7,5,3,7,5,3');
+            process.exit(1);
+        }
+        
+        // Parse dice configurations
+        const diceConfigs = DiceGame.parseArguments(args);
+        
+        // Create and start the game
+        const game = new DiceGame(diceConfigs);
+        game.playGame();
+        
+    } catch (error) {
+        console.error(`\nError: ${error.message}`);
+        console.error('\nCorrect usage: node nonTransitiveDiceGame.js <dice1> <dice2> <dice3> [dice4] [dice5] ...');
+        console.error('Example: node nonTransitiveDiceGame.js 2,2,4,4,9,9 6,8,1,1,8,6 7,5,3,7,5,3');
+        process.exit(1);
+    }
+}
+
+// Run the game if this file is executed directly
+if (require.main === module) {
+    main();
+}
+
+module.exports = { DiceGame, Dice, FairRandomGenerator };
