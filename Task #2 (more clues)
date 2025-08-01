@@ -1,0 +1,15 @@
+Well, just follow the step-by-step instruction and your will get the proper result. 
+
+Is it all? Well, don't write whatever you don't have to write. E.g. many of you have problems with proper unzipping all the files via the code. Well, you don't need to code this. Unzip the files manually — it's a single time operation.
+
+Also. Check if you use SHA3-256 (note that SHA-256 is a different hash function; also, Keccak, albeit being a similar, differs slightly, so you will not get the proper results with it).  E.g., for JavaScript: beware of the outdated obsolete crypto-js, which uses Keccak even if you ask for SHA3. The solution is simple — use standard embedded node:crypto ignoring what AI says. 
+
+You can check what hash function you use by using standard test vectors. E.g., for empty string, SHA3-256 should return
+a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a (not c5d24601...).
+
+Output (just to debug) number of the files you process. You should get 256 (if you try to process all files in the folder, you may get something unwanted, like hidden files). It's helpful for debugging to print file names too.
+
+Concatenate your strings without separator — beware of JavaScript's join! 
+Check if you write e-mail and hashes in lower case and use the same e-mail during the submission that was used in code. 
+You have to calculate separate hash for every file, not to update the same hash with the next file.
+You have to process file content, not the file name. Check also that you read files as binary files, not trying to convert to chars with some encoding.
