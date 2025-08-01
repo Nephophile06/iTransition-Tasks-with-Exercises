@@ -1,0 +1,3 @@
+Here is some libraries you may use for your implementation of help tables: ascii-table (npm package) or ConsoleTable (Nuget package) or terminal-table (Ruby gem) или Console_Table (PHP). Obviously, you may use any other. And here is the explanation what hash and HMAC is: ⁠iLearning⁠
+
+Small note: in the case of the sum of two bits (modulo 2), it can be considered as whether user and computer choices are equal or not (if user guessed the computer choice 0 or 1, user selects the dice first).
