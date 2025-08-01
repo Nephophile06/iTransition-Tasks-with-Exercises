@@ -1,0 +1,43 @@
+So, here are some ideas about solving the TASK #1. It's not "the optimal" or "the best" solution, but it's "good enough" solution that will work.
+
+Please, if you are still not tried to solve it, don't read the text below — it's okeish to read about tasks instead of solving them, but it may impact your future performance negatively. Read it only if you are completely stuck.
+
+First of all, we need to access command line arguments. We may do it using something like this:
+const a = process.argv.slice(2);
+
+Obviously, we need to "minify" our code (it's the single most important requirement in the first task), so we transform it to a=process.argv.slice(2) without semicolon, spaces and const. Agree?
+
+I will not compress/optimize the following code samples, because, well, it's a task for you— and I just try to help some of you, who are completely stuck.
+
+Next, we need to use some string as a "source of substrings for testing". Well, let's take the first one:
+s=a[0]
+
+But wait, what about the case when we don't have string at all? Well, we need to check if we have at least one string. We may use just an empty string in this case as a replacement:
+if(s===undefined)s=''
+
+Of course, it can be compressed. We can replace it with if(!s)s='' or even s=a[0]||'', but let's forget about compression for the moment.
+
+So, now we have a string. Let's iterate over all possible substrings, starting from the longest one (the first string itself) and going down to the shortest ones (note that "" is the shortest possible substring, so we will definitely find the solution at some point).
+
+If our s string have the length l, we have only one possible substring of the l length (the s itself). We have 2 substrings of the length l-1 (for l > 1), the s without the first character and the s without the last character. We have 3 substring of the length l-2 (for l>2) — without the two first chars, without the last two chars, and without the single first and the single last chars. And so on.
+And, of course, we have l of substrings from one characters.
+
+So, we have 1 + 2 + 3 + ... + l substrings to check, or ½l(l+1). If we consider the string operation time fixed (which isn’t true, but we won’t ‘touch’ them), we get Ω(l²n) time complexity for n strings. Generally, it's bad, but in our case we that l is no more than 256, so, less than 33000 substrings to check... Well, it's OK for this task (the size has the highest priority in this task).
+
+So, we can iterate over all possible lengths of the substrings:
+for(l=s.length;~l;l--)
+
+And inside we can iterate over all possible substring start positions:
+for(x=0;x<=s.length-l;x++){
+
+OK. Right now we need to check if "the current substring of the first string" is the substring of all the strings we have. We must do it in a proper way, using a single call to the every method, it's re-use and it's one of the topics of the meetings this Friday, but let me use the "stupid way with loops and flags" just to avoid spoilers. 
+
+Get the substring:
+t=s.slice(x,x+l)
+
+And check all our strings (but please remember that we can compress it significantly with a single simple efficient understandable call to a high-level API):
+f=true
+for(i=0;i<a.length;i++)if(!a[i].includes(t))f=false
+if(f){console.log(t);return}
+
+So, that's it. Even without trying, we get a less than 230 bytes solution. Easily, using several trivial optimizations like true/false replacement and one required optimization — I'm again talking about every — we can go well below 180 (I've mentioned everything needed for this).
