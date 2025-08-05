@@ -48,19 +48,8 @@ Why admin should be able to delete or block itself?
 Let's say you develop and configure some sensitive application, e.g. banking software. After you've completed your work, you must remove yourself at least to be able to prove in the court that you were  not able to steal money from the bank, e.g. using account deletion record in audit logs of a database as a proof.
 
 Don't ignore requirements even if you don't understand why they were specified.
+Users shouldn't be "kicked" right away. They should be "kicked" when they try to perform some action. For example, if I look at user list while somebody else blocks me (or I block itself from other browser), I can continue to stare at the users list as long as I want. But if I try to block or unblock somebody, I must be redirected to login page with the correspoding notification. You have to check before any server request that user exists and isn't blocked.
 
+You may choose the balance as you wish. You need to implement a working application, but you will have specialization in the future. And you may start your specialization even in the project. If you see yourself as a "front-end developer", you may have a very rudimentary back, you may use some service like Firebase or file-base DB like SQLite. If you see yourself as a "back-end developer", you may implement a simple "classic" straightforward Web app, without React or anything. Of course, the project requirement will contain some limitations based on the language.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+It's OK to have personal preferences — we'll try to consider them when we'll search a project for you. But you need to learn to get job done, not "a wrote a function and I don't know nothing more". You need to know and understand how to create and deploy a basic, very simple Web application. You cannot name yourself any kind of Web developer, any part or layer, if you are unable to do that.
