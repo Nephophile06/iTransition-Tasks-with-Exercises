@@ -13,3 +13,8 @@ Concatenate your strings without separator — beware of JavaScript's join!
 Check if you write e-mail and hashes in lower case and use the same e-mail during the submission that was used in code. 
 You have to calculate separate hash for every file, not to update the same hash with the next file.
 You have to process file content, not the file name. Check also that you read files as binary files, not trying to convert to chars with some encoding.
+
+Once more: be careful with the chosen library for the SHA3 implementation. It may think it provides SHA3, but don't believe everything you think. You may check it with online services, or use official test vectors. E.g., SHA3-256 for three bytes  [97, 98, 99] или [0x61, 0x62, 0x63] или ASCII "abc" is 
+3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532
+
+Also, note that files have different sizes, you could not just read 1024 bytes and pass them to the hash function. You need to read the whole file content and only it (trailing zeros in the buffer won't help you).
