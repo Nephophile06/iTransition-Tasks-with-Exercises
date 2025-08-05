@@ -34,3 +34,21 @@ public int CountWins(int[] a, int[] b) {
 }
 
 But again, it's a very speculative "what if I was asked" situation; it should't be considered as a recommended way to do things (the second variant is).
+
+A note: DON'T REUSE SECRET KEY. You have to generate a new key before every HMAC calculationn for every fair collaborative random integer generation. After you showed the key to the users, they can calculate the computer choice from the next HMAC value before they make their selection.
+Yes, it's possible and really trivial:
+
+const crypto = require("node:crypto");
+console.log(crypto.createHash("sha3-256").update("abc").digest("hex"));
+
+or
+
+<?php
+  echo hash("sha3-256", "abc"), PHP_EOL;
+?>
+
+or
+
+using var sha3 = System.Security.Cryptography.SHA3_256.Create();
+var hash = sha3.ComputeHash(System.Text.Encoding.UTF8.GetBytes("abc"));
+System.Console.WriteLine(System.Convert.ToHexStringLower(hash));
