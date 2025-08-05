@@ -1,3 +1,36 @@
 Here is some libraries you may use for your implementation of help tables: ascii-table (npm package) or ConsoleTable (Nuget package) or terminal-table (Ruby gem) или Console_Table (PHP). Obviously, you may use any other. And here is the explanation what hash and HMAC is: ⁠iLearning⁠
 
 Small note: in the case of the sum of two bits (modulo 2), it can be considered as whether user and computer choices are equal or not (if user guessed the computer choice 0 or 1, user selects the dice first).
+
+How to calculate the win probability?
+Let's say we have two dice, a and b, as int arrays. We can count the number of times when an element in the first array is greater than an element in the second. If we divide the result by the product of array lengths, we get the probability.
+
+The simplest possible variant is to write something like the following (let's use C# for this example):
+public int CountWins(int[] a, int[] b) {
+    int n = 0;
+    foreach(var x in a) {
+        foreach(var y in b) {
+            if (x > y) n++;
+        }
+    }
+    return n;
+}
+
+Note that code doesn't depend on the face count (we can use 6 or 20 or 100).
+
+There are quite a few reasons why for-loops are usually not the best option, so you may (well, rather have to) rewrite that using the "somebody already did it" approach:
+public int CountWins(int[] a, int[] b) {
+    return a.SelectMany(_ => b, (x, y) => x > y).Count(x => x);
+}
+
+Note that we still support arbitrary face count and code is much more concise.
+
+You may think that it's not very efficient to loop over all possible pairs, because the time complexity of the algorithm is quadratic in relation to the face count. But it's simple; in my opinion, in this case it's better to stop here. And it's easier to transform this version into "parallel" one than the first.
+
+The standard heuristic is to sort data (the values on the faces in our case). The sort operation requires Θ(n log n) time complexity, and after that we can reuse the standard API to write a piece of code, which is a little more cryptic, but theoretically faster for a dice with a very large face count:
+public int CountWins(int[] a, int[] b) {
+    return a.Select(x => ~Array.BinarySearch(b, x, 
+        Comparer<int>.Create((x, y) => Math.Sign(x - y + 0.5)))).Sum();
+}
+
+But again, it's a very speculative "what if I was asked" situation; it should't be considered as a recommended way to do things (the second variant is).
