@@ -18,3 +18,5 @@ Once more: be careful with the chosen library for the SHA3 implementation. It ma
 3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532
 
 Also, note that files have different sizes, you could not just read 1024 bytes and pass them to the hash function. You need to read the whole file content and only it (trailing zeros in the buffer won't help you).
+
+When the dice 2/2/4/4/9/9 is played against itself, the probability of winning is 0.3333, because there are only 12 winning combinations over 36 possible: the first 4 over the first 2, the first 4 over the second 2, the second 4 over the  first 2, the second 4 over the second 2, the first 9 over 2 or 2 or 4 or 4, and the second 9 over 2 or 2 or 4 or 4.
