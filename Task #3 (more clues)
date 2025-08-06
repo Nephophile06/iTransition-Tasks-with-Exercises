@@ -52,3 +52,59 @@ or
 using var sha3 = System.Security.Cryptography.SHA3_256.Create();
 var hash = sha3.ComputeHash(System.Text.Encoding.UTF8.GetBytes("abc"));
 System.Console.WriteLine(System.Convert.ToHexStringLower(hash));
+
+In this task you don't need async calls at all because, you don't want to sort array before you read files, right? Just use readFileSync instead of readFile. Get user input from terminal (related to the task #3)
+
+So, you have some basic setup:
+const readline = require("readline").createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+And you try to write something like this
+console.log("Start");
+const value = readline.question("Your value:", function(move) {
+    console.log("Your value is " + value);
+    readline.close();
+});
+console.log("Finish");
+
+And expectedly you get the following output
+Start
+Your value:Finish
+rock
+Your value is rock
+
+But you want to get something different, right?
+There are many ways to get the needed result. E.g., you may use promises. You need to put your code inside the function — obviously, "global" code outside functions/obejcts/modules/etc. is a really bad idea anyway. So, you can write
+async function question(hind) {
+    return new Promise(r => {
+        readline.question("Your value:", r); 
+    });
+}
+
+async function main() {
+    console.log("Start");
+    const value = await question("Your value:");
+    console.log("Your value is " + value);
+    console.log("Finish");
+    readline.close();
+}
+
+main();
+
+And get
+Start
+Your value:rock
+Your value is rock
+Finish
+
+Also — it's arguably better approach — apply the "don't reinvent the wheel" rule and use readline-sync (use the mantra "we are not the first people to encounter this")
+const readline = require("readline-sync"); 
+
+console.log("Start");
+const value = readline.question("Your value:");
+console.log("Your value is " + value);
+console.log("Finish");
+
+It's simpler and cleaner, because, well, you don't need anything asynchronous there.
