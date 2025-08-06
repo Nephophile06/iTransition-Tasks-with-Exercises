@@ -110,3 +110,33 @@ console.log("Finish");
 It's simpler and cleaner, because, well, you don't need anything asynchronous there.
 
 When the dice 2/2/4/4/9/9 is played against itself, the probability of winning is 0.3333, because there are only 12 winning combinations over 36 possible: the first 4 over the first 2, the first 4 over the second 2, the second 4 over the  first 2, the second 4 over the second 2, the first 9 over 2 or 2 or 4 or 4, and the second 9 over 2 or 2 or 4 or 4.
+
+It's  better to design your code for extension, not modification it. But some choose the approach with the error type enums and some kind of static switch-based method creating instances of Error by the enum value or something. Sometimes "Error" has additional logic, adding an usage example to all messages, and that's a good idea. But enums ain't very cool... They are closed for extension. 
+public class ValidationError {
+    private String message;
+   
+    protected ValidationError(String message) {
+        this.message = message;
+    }
+
+    public static ValidationError InvalidDiceCountLength = 
+        new ValidationError("Please specify at least two dice.");
+
+    public static ValidationError InvalidFaceCount = 
+        new ValidationError("The dice must have 6 faces.");    
+        
+    public override String ToString() {
+        return String.Join("\n", 
+            "Argument error.",
+            message, 
+            "Example: 1,2,3,4,5,6 1,2,3,4,5,6.");
+    }    
+}
+
+It's not an ideal approach (e.g., usage of the ToString method to generate UI messages is frowned upon), but you may access existing errors by using "predefined" instances like ValidationError.InvalidFaceCount and new errors can be added without code modification. Of course, you may tune it for your needs, e.g., the code above doesn't allow direct instantiation—constructor is protected—but allows subclassing to create new error types without changing error class or some enum for that. So, there are a lot of nuances, but it's definitely better than the class that accepts enum in constructor.
+
+There are additional big problems with using exceptions for the expected data entry errors (in short, don't do that)—that's why class "ValidationError" is not an exception.
+
+6-9 classes is not the ideal number of classes for this task, it's the lower bound. Because it's too complex to be in a single class, it's too much "job". 
+Every class should have only one responsibility—it's a major design principle. In fact, it's one of the SOLID principles—I will write about them later. 
+For example, if we decide to change how help works, e.g., to print list of "winning over" dice for each of the available dice instead of the probability  table, we should not even touch the class that contains the logic of HMAC calculation or menu "rendering". From the experience, your classes are never too small. They alsways are too big. Always remember about single responsibility.
