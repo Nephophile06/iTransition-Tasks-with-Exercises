@@ -140,3 +140,11 @@ There are additional big problems with using exceptions for the expected data en
 6-9 classes is not the ideal number of classes for this task, it's the lower bound. Because it's too complex to be in a single class, it's too much "job". 
 Every class should have only one responsibility—it's a major design principle. In fact, it's one of the SOLID principles—I will write about them later. 
 For example, if we decide to change how help works, e.g., to print list of "winning over" dice for each of the available dice instead of the probability  table, we should not even touch the class that contains the logic of HMAC calculation or menu "rendering". From the experience, your classes are never too small. They alsways are too big. Always remember about single responsibility.
+
+Just to generate random number is not enough – this way computer may cheat. Each roll (user's and computer's) as well as initial "who goes first" procedure require two values (one from each player, user and computer). So, in total 3 values from the user (not including +1 for the dice selection), 3 values from the computer, 3 secret keys, 3 HMACs. The first move is the dice selection; it determines the "winning probability" in non-transitive game. Rolls theoretically may be performed at the same time, it's just easier to understannd what is happenning, if rolls are serialized.
+
+And again:
+KeyHex = BitConverter.ToString(key).Replace("-", "").ToLower(),
+HmacHex = BitConverter.ToString(hmac).Replace("-", "").ToLower()
+
+First of all, it's an example of a bad duplication. And the second, take suggestions from AI with a grain of salt. In this case it's much clearer to use Convert.ToHexString or Convert.ToHexStringLower. And it's very easy to google it.
